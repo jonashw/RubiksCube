@@ -21,41 +21,6 @@ data SpindleNode = SpindleNode { __front :: Color, __back   :: Color
 type Triplet a = (a,a,a)
 
 --convenience
-rightNeighbor F = R
-rightNeighbor B = L
-rightNeighbor L = F
-rightNeighbor R = B
-rightNeighbor U = R
-rightNeighbor D = R
-
-leftNeighbor F = L
-leftNeighbor B = R
-leftNeighbor L = B
-leftNeighbor R = F
-leftNeighbor U = L
-leftNeighbor D = L
-
-upNeighbor F = U
-upNeighbor B = U
-upNeighbor L = U
-upNeighbor R = U
-upNeighbor U = B
-upNeighbor D = F
-
-downNeighbor F = D
-downNeighbor B = D
-downNeighbor L = D
-downNeighbor R = D
-downNeighbor U = F
-downNeighbor D = B
-
-backNeighbor F = B
-backNeighbor B = F
-backNeighbor L = R
-backNeighbor R = L
-backNeighbor U = D
-backNeighbor D = U
-
 centerColor :: FaceCode -> Color
 centerColor F = White
 centerColor B = Yellow
@@ -64,11 +29,22 @@ centerColor R = Orange
 centerColor U = Green
 centerColor D = Blue
 
+neighbors :: FaceCode -> [(FaceCode,FaceCode)]
+neighbors F  = [(L,L),(R,R),(U,U),(D,D),(B,B),(F,F)]
+neighbors B  = [(L,R),(R,L),(U,U),(D,D),(B,F),(F,F)]
+neighbors L  = [(L,B),(R,F),(U,U),(D,D),(B,R),(F,F)]
+neighbors R  = [(L,F),(R,B),(U,U),(D,D),(B,R),(F,F)]
+neighbors U  = [(L,L),(R,R),(U,B),(D,F),(B,D),(F,F)]
+neighbors D  = [(L,L),(R,R),(U,F),(D,B),(B,D),(F,F)]
+
+neighbor :: FaceCode -> FaceCode -> (Maybe FaceCode)
+neighbor faceCode neighborCode = lookup neighborCode $ neighbors faceCode
+
 allColors = [minBound :: Color .. maxBound :: Color] -- cool :D
 allFaceCodes = [minBound :: FaceCode .. maxBound :: FaceCode]
 
 allFaces :: [Face]
-allFaces = map (\colors -> Face { center = colors !! 0
+allFaces = Prelude.map (\colors -> Face { center = colors !! 0
                                  ,_top   = colors !! 1
                                  ,bottom = colors !! 2
                                  ,_left  = colors !! 3
