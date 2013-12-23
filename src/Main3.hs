@@ -11,22 +11,9 @@ data Axis = X | Y | Z deriving(Show,Ord,Eq)
 data Extreme = Min | Max deriving(Show,Ord,Eq)
 data Vector = Vector { x :: Double, y :: Double, z :: Double } deriving(Show)
 
-pieceTile :: Piece -> Face -> Maybe Tile
-pieceTile p pf | pieceIsQueryable p = Map.lookup pf (tiles p)
-               |          otherwise = Nothing
-
-pieceIsQueryable :: Piece -> Bool
-pieceIsQueryable p = rotationIsRight $ rotation p
-
-rotationIsRight :: Vector -> Bool
-rotationIsRight r = all rightAngle $ map (\f -> f r) [x,y,z]
-
-rightAngle :: Double -> Bool
-rightAngle angle = (mod' angle 90) == 0
-
-
 --
 -- constructors
+--
 --
 cubePieces :: [Piece]
 cubePieces = concat $ map zLayerPieces [0,1,2]
@@ -84,6 +71,30 @@ edgeTiles f u = Map.fromList [ (Face Z Max, f), (Face Y Max, u) ]
 --
 centerTiles :: Tile -> Map Face Tile
 centerTiles f = Map.fromList [ (Face Z Max, f) ]
+
+
+--
+-- queries
+--
+--zLayerTiles :: [Piece] -> Double -> [Tile]
+--zLayerTiles ps z =
+pieceTile :: Piece -> Face -> Maybe Tile
+pieceTile p pf | pieceIsQueryable p = Map.lookup pf (tiles p)
+               |          otherwise = Nothing
+
+-- maps an absolute face to the face of a rotated piece
+--pieceRotatedFace :: Piece -> Face -> Face
+--pieceRotatedFace p f =
+
+pieceIsQueryable :: Piece -> Bool
+pieceIsQueryable p = rotationIsRight $ rotation p
+
+rotationIsRight :: Vector -> Bool
+rotationIsRight r = all rightAngle $ map (\f -> f r) [x,y,z]
+
+rightAngle :: Double -> Bool
+rightAngle angle = (mod' angle 90) == 0
+
 
 --
 --convenience
