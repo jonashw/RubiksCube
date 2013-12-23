@@ -4,8 +4,8 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Fixed
 
-data Piece = Piece {tiles :: Map Face Tile, position :: Vector, rotation :: Vector} | Void deriving (Show)
-data Tile = Red | Orange | Yellow | Green | Blue | White deriving(Show,Eq)
+data Piece = Piece {tiles :: Map Face Tile, position :: Vector, rotation :: Vector} deriving (Show)
+data Tile = Red | Orange | Yellow | Green | Blue | White | BlankTile deriving(Show,Eq)
 data Face = Face Axis Extreme deriving(Show,Ord,Eq)
 data Axis = X | Y | Z deriving(Show,Ord,Eq)
 data Extreme = Min | Max deriving(Show,Ord,Eq)
@@ -24,15 +24,12 @@ rotationIsRight r = all rightAngle $ map (\f -> f r) [x,y,z]
 rightAngle :: Double -> Bool
 rightAngle angle = (mod' angle 90) == 0
 
--- tile map constructors for each piece type
-cornerTiles :: Tile -> Tile -> Tile -> Map Face Tile
-cornerTiles f u l = Map.fromList [ (Face Z Max, f), (Face Y Max, u), (Face X Min, l) ]
 
-edgeTiles :: Tile -> Tile -> Map Face Tile
-edgeTiles f u = Map.fromList [ (Face Z Max, f), (Face Y Max, u) ]
-
-centerTiles :: Tile -> Map Face Tile
-centerTiles f = Map.fromList [ (Face Z Max, f) ]
+--
+-- constructors
+--
+cubePieces :: [Piece]
+cubePieces = concat $ map zLayerPieces [0,1,2]
 
 -- layer constructors
 zLayerPieces :: Double -> [Piece]
@@ -55,30 +52,42 @@ zLayerRotations 2 = frontLayerRotations
 zLayerRotations _ = error("valid z-values are 0-2")
 
 frontLayerRotations =  [Vector 0 0 0,   Vector 0 0 0,   Vector 0 0 90,
-                       Vector 0 0 270, Vector 0 0 0,   Vector 0 0 90,
-                       Vector 0 0 270, Vector 0 0 180, Vector 0 0 180]
+                        Vector 0 0 270, Vector 0 0 0,   Vector 0 0 90,
+                        Vector 0 0 270, Vector 0 0 180, Vector 0 0 180]
 
 frontLayerTileMaps =   [cornerTiles White Green Red, edgeTiles White Green, cornerTiles White Green Orange,
                         edgeTiles White Red,         centerTiles White,     edgeTiles White Orange,
                         cornerTiles White Red Blue,  edgeTiles White Blue,  cornerTiles White Blue Orange]
 
-middleLayerRotations = [Vector 0 0 0,   Vector 0 0 0,   Vector 0 0 90,
-                        Vector 0 0 270, Vector 0 0 0,   Vector 0 0 90,
-                        Vector 0 0 270, Vector 0 0 180, Vector 0 0 180]
+middleLayerRotations = [Vector 0 270 0,   Vector 90 0 0,  Vector 0 90 0,
+                        Vector 0 0 270,   Vector 0 0 0,   Vector 0 0 90,
+                        Vector 180 270 0, Vector 270 0 0, Vector 180 90 0]
 
-middleLayerTileMaps =  [cornerTiles White Green Red, edgeTiles White Green, cornerTiles White Green Orange,
-                        edgeTiles White Red,         centerTiles White,     edgeTiles White Orange,
-                        cornerTiles White Red Blue,  edgeTiles White Blue,  cornerTiles White Blue Orange]
+middleLayerTileMaps =  [edgeTiles Red Green, centerTiles Green,     edgeTiles Orange Green,
+                        centerTiles Red,     centerTiles BlankTile, centerTiles Orange,
+                        edgeTiles White Red, centerTiles Blue,      edgeTiles Blue Orange]
 
-backLayerRotations =   [Vector 0 0 0,   Vector 0 0 0,   Vector 0 0 90,
-                        Vector 0 0 270, Vector 0 0 0,   Vector 0 0 90,
-                        Vector 0 0 270, Vector 0 0 180, Vector 0 0 180]
+backLayerRotations =  [Vector 0 180 0,   Vector 0 180 0,   Vector 0 180 90,
+                       Vector 0 180 270, Vector 0 180 0,   Vector 0 180 90,
+                       Vector 0 180 270, Vector 0 180 180, Vector 0 180 180]
 
-backLayerTileMaps =    [cornerTiles White Green Red, edgeTiles White Green, cornerTiles White Green Orange,
-                        edgeTiles White Red,         centerTiles White,     edgeTiles White Orange,
-                        cornerTiles White Red Blue,  edgeTiles White Blue,  cornerTiles White Blue Orange]
+backLayerTileMaps =    [cornerTiles Yellow Green Orange, edgeTiles Yellow Green, cornerTiles Red Green Yellow,
+                        edgeTiles Yellow Red,            centerTiles Yellow,     edgeTiles Yellow Red,
+                        cornerTiles Yellow Orange Blue,  edgeTiles Yellow Blue,  cornerTiles Yellow Blue Red]
 
+-- tile map constructors for each piece type
+cornerTiles :: Tile -> Tile -> Tile -> Map Face Tile
+cornerTiles f u l = Map.fromList [ (Face Z Max, f), (Face Y Max, u), (Face X Min, l) ]
+--
+edgeTiles :: Tile -> Tile -> Map Face Tile
+edgeTiles f u = Map.fromList [ (Face Z Max, f), (Face Y Max, u) ]
+--
+centerTiles :: Tile -> Map Face Tile
+centerTiles f = Map.fromList [ (Face Z Max, f) ]
+
+--
 --convenience
+--
 showlist vl = mapM_ (putStrLn . show) vl
 
 --
