@@ -3,6 +3,8 @@ module Main3 where
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Fixed
+import Test.HUnit
+import Test.QuickCheck
 
 data Piece = Piece {tiles :: Map Face Tile, position :: Vector, rotation :: Vector} deriving (Show)
 data Tile = Red | Orange | Yellow | Green | Blue | White | BlankTile deriving(Show,Eq)
@@ -117,3 +119,21 @@ notZeroPiece = Piece cornerPieceTileMap notZero notZero
 
 cornerPieceTileMap :: Map Face Tile
 cornerPieceTileMap = Map.fromList [ (Face X Min,Red), (Face Y Max,Blue), (Face Z Max,White) ]
+
+
+--
+-- Tests
+--
+tests = TestList $ map TestCase
+  [assertEqual "add tests here" 1  1
+  ]
+
+prop_empty c1 = (c1 :: Int) == c1
+
+runTests = do
+  -- runTestTT tests
+  -- quickCheck prop_empty
+  return ()
+
+main :: IO ()
+main = runTests
