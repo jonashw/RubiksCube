@@ -1,6 +1,7 @@
 module Main4 where
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.List (find)
 
 data Cube = Cube { pieces :: [Piece] }
 {-
@@ -21,7 +22,19 @@ data Piece = Piece { pos :: Vector, tiles :: [Tile] } deriving(Show,Eq)
  -  |   p   |
  -  |_______|
  -}
-data Tile = Tile { position :: Vector, rotation :: Vector, color :: Color } | NoTile deriving(Show,Eq)
+data Tile = Tile Vector Vector Color | NoTile deriving(Show,Eq)
+
+color :: Tile -> Color
+color NoTile = X
+color (Tile _ _ c) = c
+
+position :: Tile -> Vector
+position NoTile = Vector (-9) (-9) (-9) 
+position (Tile p _ _) = p
+
+rotation :: Tile -> Vector
+rotation NoTile = Vector (-9) (-9) (-9)
+rotation (Tile _ r _) = r
 
 {-
  - Coordinate system:
@@ -111,7 +124,6 @@ makeTile c xc yc zc = Tile (Vector xc yc zc) (Vector 0 0 0) c
 
 showlist vl = mapM_ (putStrLn . show) vl
 
-
 -- Querying
 data Face = FrontFace | RightFace | BackFace | LeftFace | UpFace | DownFace deriving(Show,Eq,Ord)
 
@@ -131,32 +143,23 @@ facePieceTileCoordinateMap = Map.fromList [ (FrontFace, (z, (halfTileLength +)))
                                            ,(UpFace,    (y, (halfTileLength +)))
                                            ,(DownFace,  (y, (halfTileLength -))) ]
 
+getFaceColors :: Face -> [Piece] -> [Maybe Color]
+getFaceColors f ps = map (getPieceFaceColor f) $ getFacePieces' f ps
 
---getFaceColors :: [Piece] -> Face -> [Color]
---getFaceColors ps f = lookup f facePieceTileCoordinateMap
-{-
-getFaceColors :: [Piece] -> Face -> [Color]
-getFaceColors ps f = map color $ map snd $ filter (\pt -> (cfn $ position t)) $ map (\p -> (pos p, tiles p)) $ getFacePieces ps f
-                     where
-                       fptcm = facePieceTileCoordinateMap Map.! f
-                       cfn = fst fptcm
-                       vfn = snd fptcm
--}
-
-getPieceFaceColor :: Face -> Piece -> [Tile]
-getPieceFaceColor f p = filter (\t -> (cfn $ position t) == expected) (tiles p)
+getPieceFaceColor :: Face -> Piece -> Maybe Color
+getPieceFaceColor f p = fmap color $ find (\t -> (component_fn $ position t) == expected) (tiles p)
                         where
                           fptcm = facePieceTileCoordinateMap Map.! f
-                          cfn = fst fptcm
-                          vfn = snd fptcm
-                          expected = vfn $ cfn $ pos p
+                          component_fn = fst fptcm
+                          value_fn = snd fptcm
+                          expected = value_fn $ component_fn $ pos p
 
-getFacePieces' :: [Piece] -> Face -> [Piece]
-getFacePieces' ps f = filter (\p -> (fn $ pos p) == value) ps
+getFacePieces' :: Face -> [Piece] -> [Piece]
+getFacePieces' f ps = filter (\p -> (component_fn $ pos p) == expected) ps
                       where
                         fpcm = facePieceCoordinateMap Map.! f
-                        fn = fst fpcm
-                        value = snd fpcm
+                        component_fn = fst fpcm
+                        expected = snd fpcm
 
 getFacePieces :: [Piece] -> Face -> [Piece]
 getFacePieces ps FrontFace = filter (\p -> (z (pos p)) == 2) ps
@@ -165,6 +168,3 @@ getFacePieces ps BackFace  = filter (\p -> (z (pos p)) == 0) ps
 getFacePieces ps LeftFace  = filter (\p -> (x (pos p)) == 0) ps
 getFacePieces ps UpFace    = filter (\p -> (y (pos p)) == 2) ps
 getFacePieces ps DownFace  = filter (\p -> (y (pos p)) == 0) ps
-
-testAssocList = [('a',1),('b',2),('c',3)]
-testMap = Map.fromList [ ('a',1), ('b',2), ('c',3) ]
